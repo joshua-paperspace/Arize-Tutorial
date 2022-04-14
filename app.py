@@ -6,7 +6,7 @@ from arize.pandas.logger import Client, Schema
 from arize.utils.types import Environments, ModelTypes
 
 # MODEL_PATH = '/opt/models/xgb_model.json'
-MODEL_PATH = './xgb_cl_model.json'
+MODEL_PATH = '/opt/models/xgb_cl_model.json'
 
 app = Flask(__name__)
 
