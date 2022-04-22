@@ -5,8 +5,7 @@ import xgboost as xgb
 from arize.pandas.logger import Client, Schema
 from arize.utils.types import Environments, ModelTypes
 
-# MODEL_PATH = '/opt/models/xgb_model.json'
-MODEL_PATH = '/opt/models/xgb_cl_model.json'
+MODEL_PATH = './models/xgb_cl_model.json'
 
 app = Flask(__name__)
 
@@ -30,14 +29,9 @@ def churn_prediction():
         'PaymentMethod']
     continuous_cols = ['tenure', 'MonthlyCharges', 'TotalCharges']
 
-    # df.drop(df[df['TotalCharges'].str.strip() == ''].index, inplace=True)
-    # df.reset_index(inplace=True, drop=True)
     orig = df.copy()
 
-    
     df = pd.get_dummies(df.drop(['customerID'], axis=1), columns=categorical_cols)
-    # df = pd.get_dummies(df, columns = target)
-    # df.rename(columns={'Churn_Yes': 'Churn'}, inplace=True)
 
     def min_max_normalize(col):
         return col / col.abs().max()
@@ -67,30 +61,16 @@ def churn_prediction():
        'PaymentMethod_Electronic check', 'PaymentMethod_Mailed check']
 
     df = df.reindex(df.columns.union(all_cols, sort=False), axis=1, fill_value=0)
-    print(df.columns)
-    # df2 = df[all_cols]
-    # df2 = df.drop(categorical_cols, axis=1, errors='ignore')
-
-    print('here')
-    print(df.shape)
-    print(df.columns)
+    feature_cols = single_pred.drop(['customerID', 'Predicted_Churn'], axis=1).columns
 
     #XGBoost Classifier
     xgb_cl = xgb.XGBClassifier()
     xgb_cl.load_model(MODEL_PATH)
-
-    # print('here')
-    # print(df.shape)
-    # print(df.columns)
     pred = xgb_cl.predict(df)
-    # print(accuracy_score(y_test, preds2))
 
-    print(pred)
-
-
-
-    SPACE_KEY = "be431ff"
-    API_KEY = "3b6a922ea5ac74536e7"
+    # Arize API
+    SPACE_KEY = "YOUR-SPACE-KEY" # be431ff
+    API_KEY = "YOUR-API-KEY" # 3b6a922ea5ac74536e7
 
     arize_client = Client(space_key=SPACE_KEY, api_key=API_KEY)
 
@@ -99,33 +79,24 @@ def churn_prediction():
     )
     model_version = "v1.0"  # Version of model - can be any string
 
-    if SPACE_KEY == "SPACE_KEY" or API_KEY == "API_KEY":
+    if SPACE_KEY == "YOUR-SPACE-KEY" or API_KEY == "YOUR-API-KEY":
         raise ValueError("❌ NEED TO CHANGE SPACE AND/OR API_KEY")
     else:
         print("✅ Arize setup complete!")
 
-
-    print('HEREERHERHERH')
-    print(orig.columns)
-    # return
+    
+    # Create record for logging to Arize
     single_pred = orig.copy()
     single_pred['Predicted_Churn'] = pred[0]
-    # single_pred  = pd.concat([orig, pd.DataFrame(pred, columns=['Prediction'])], axis=1)
 
-
-    feature_cols = single_pred.drop(['customerID', 'Predicted_Churn'], axis=1).columns
-    ## Test a single Prod prediction
-
-    # Define a Schema() object for Arize to pick up data from the correct columns for logging
-    ## Add Dates in here somewhere!
+    # Define a Production Schema() object for Arize to pick up data from the correct columns for logging
     prod_schema = Schema(
         prediction_id_column_name="customerID",
         prediction_label_column_name="Predicted_Churn",
-        # actual_label_column_name="Churn",
         feature_column_names=feature_cols,
     )
 
-    # Logging Prod DataFrame
+    # Logging Production Prediction
     prod_response = arize_client.log(
         dataframe=single_pred,
         model_id=model_id,
@@ -144,36 +115,10 @@ def churn_prediction():
         print(f"✅ You have successfully logged production data to Arize")
 
 
-    return Response(pred[0], status=201, content_type='application/json')
+    response_map = {0: 'No Churn', 1: 'Churn'}
+    return Response(response_map[pred[0]], status=201, content_type='application/json')
 
-    df = pd.read_json(request_data)
-
-    print(df)
-
-    # language = request_data['language']
-    # framework = request_data['framework']
-
-
-
-    # image = Image.open(request.form['img'])
-
-    # image_functionality(prompt)
-
-    # filename = 'static/uploads/uploaded_image.png'
-    # image.save(filename)
-
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # model = resnet18(3, 10)
-    # model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-
-    # tensor = imgToTensor(image)
     
-    # output = model(tensor)
-    # _, predicted = torch.max(output.data, 1)
-    # print(predicted)
-    # prediction = classes[predicted]
-
-    # return render_template('result.html', prediction=prediction)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port='8000')
