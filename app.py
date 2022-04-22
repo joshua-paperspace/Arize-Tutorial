@@ -61,7 +61,6 @@ def churn_prediction():
        'PaymentMethod_Electronic check', 'PaymentMethod_Mailed check']
 
     df = df.reindex(df.columns.union(all_cols, sort=False), axis=1, fill_value=0)
-    feature_cols = single_pred.drop(['customerID', 'Predicted_Churn'], axis=1).columns
 
     #XGBoost Classifier
     xgb_cl = xgb.XGBClassifier()
@@ -88,6 +87,9 @@ def churn_prediction():
     # Create record for logging to Arize
     single_pred = orig.copy()
     single_pred['Predicted_Churn'] = pred[0]
+
+    feature_cols = single_pred.drop(['customerID', 'Predicted_Churn'], axis=1).columns
+    
 
     # Define a Production Schema() object for Arize to pick up data from the correct columns for logging
     prod_schema = Schema(
