@@ -8,7 +8,7 @@ command:
     pip install -r requirements.txt
     python app.py
 repositories:
-  dataset: yourdatasetid
+  dataset: your-dataset-id
   mountPath: /opt/repos
   repositories:
     - url: https://github.com/joshua-paperspace/Arize-Tutorial

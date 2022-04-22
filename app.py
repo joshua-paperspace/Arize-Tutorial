@@ -68,8 +68,8 @@ def churn_prediction():
     pred = xgb_cl.predict(df)
 
     # Arize API
-    SPACE_KEY = "YOUR-SPACE-KEY" # be431ff
-    API_KEY = "YOUR-API-KEY" # 3b6a922ea5ac74536e7
+    SPACE_KEY = "be431ff" # be431ff
+    API_KEY = "3b6a922ea5ac74536e7" # 3b6a922ea5ac74536e7
 
     arize_client = Client(space_key=SPACE_KEY, api_key=API_KEY)
 
@@ -89,7 +89,7 @@ def churn_prediction():
     single_pred['Predicted_Churn'] = pred[0]
 
     feature_cols = single_pred.drop(['customerID', 'Predicted_Churn'], axis=1).columns
-    
+
 
     # Define a Production Schema() object for Arize to pick up data from the correct columns for logging
     prod_schema = Schema(
